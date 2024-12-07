@@ -553,7 +553,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .padding(0);
     
         const colorScale = d3.scaleLinear()
-            .domain([0, 100])
+            .domain([30, 70])
             .range(["#ffffff", "#ff0000"]);
     
         const tooltip = d3.select("body").append("div")
