@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const clusterSvgWidth = 600;
-    const clusterSvgHeight = 600;
+    const clusterSvgWidth = 500;
+    const clusterSvgHeight = 500;
     const cellSvgWidth = 600;
     const cellSvgHeight = 500;
 
@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let filteredData = [];
     let dataForClustering = [];
 
-    const sources = ['A병원', 'B병원', 'C병원', 'UNIST'];
+    const sources = ['KU', 'UL', 'AS', 'UT']; 
+
     const features = [
         'activity', 'app_usage', 'bluetooth_connection', 'light', 'location',
         'phone_call', 'proximity', 'response', 'screen_state', 'sleep',
@@ -17,8 +18,10 @@ document.addEventListener('DOMContentLoaded', function() {
         'watch_gyroscope', 'watch_heart_rate', 'watch_light',
         'watch_ppg_green', 'watch_step_counts'
     ];
+    const groupsht = ['Normal', 'Patient'];
 
     let selectedSources = new Set(sources);
+    let selectedGroups = new Set(groupsht);
     let selectedDateRange = [null, null];
     let selectedFeature = null;
     let clusteringResults = { assignments: [], centroids: [] };
@@ -36,7 +39,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 d.GAD7 = +d.GAD7;
                 d.AVGG = +d.AVGG;
                 d.watch_step_counts = +d.watch_step_counts;
-                d.user_id = +d.user_id;
             });
 
             console.log("Data loaded:", data);
@@ -75,6 +77,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .attr("value", formatDate(maxDate))
             .on("change", updateFilters);
 
+        const sourceMapping = {
+                'KU': 'Kangwon National University Hospital',
+                'UL': 'Ulsan National University Hospital',
+                'AS': 'Seoul Asan Medical Center',
+                'UT': 'UNIST'
+        };    
+
         const sourcesList = d3.select("#sources-list");
         sources.forEach(source => {
             const label = sourcesList.append("label");
@@ -90,7 +99,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     updateFilters();
                 });
-            label.append("span").text(source);
+            label.append("span").text(sourceMapping[source]); // 약어 대신 전체 이름 표시
+        });
+
+        const groupList = d3.select("#group-list");
+        groupsht.forEach(group => {
+            const label = groupList.append("label");
+            label.append("input")
+                .attr("type", "checkbox")
+                .attr("checked", true)
+                .attr("value", group)
+                .on("change", function() {
+                    if (this.checked) {
+                        selectedGroups.add(this.value);
+                    } else {
+                        selectedGroups.delete(this.value);
+                    }
+                    updateFilters(); // 필터링 함수 호출
+                });
+            label.append("span").text(group);
         });
 
         const featureList = d3.select("#features");
@@ -121,6 +148,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
         });
+
+
     }
 
     // Format date to YYYY-MM-DD
@@ -135,23 +164,25 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateFilters() {
         const startDate = new Date(d3.select("#start-date").property("value"));
         const endDate = new Date(d3.select("#end-date").property("value"));
-        selectedDateRange = [startDate, endDate];
-
+    
         filteredData = allData.filter(d => {
-            return selectedSources.has(d.source) &&
+            return selectedSources.has(d.source) &&    // 소스 필터
+                   selectedGroups.has(d.group) &&     // 그룹 필터 추가
                    d.date >= startDate &&
                    d.date <= endDate;
         });
-
-        performClustering();
-        populateClusterDropdown();
-        drawClusteringScatterPlot();
-        drawCellVisualization();
-        drawCorrelationHeatmap(); // 히트맵 업데이트
+    
+        // 필터링 결과에 따라 시각화 업데이트
+        performClustering();          // 클러스터링 업데이트
+        populateClusterDropdown();    // 클러스터 선택 드롭다운 업데이트
+        drawClusteringScatterPlot();  // 클러스터 스캐터 플롯 업데이트
+        drawCellVisualization();      // 셀 시각화 업데이트
+        drawCorrelationHeatmap();     // 상관 행렬 히트맵 업데이트
         if (selectedFeature) {
-            drawFeatureGraph(selectedFeature);
+            drawFeatureGraph(selectedFeature);  // 선택된 Feature 그래프 업데이트
         }
     }
+    
 
     function performClustering() {
         // Aggregate PHQ9, CESD, GAD7 per user_id
@@ -399,17 +430,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function drawCellVisualization() {
         const container = d3.select("#cell-container");
-        container.style("overflow", "auto"); // Enable scrolling if needed
+        container.style("overflow", "auto");
         container.selectAll("*").remove(); // Clear previous drawings
     
-        // Set dimensions for each individual visualization
-        const individualWidth = cellSvgWidth / 2; // Adjust as needed
-        const individualHeight = cellSvgHeight / 2; // Adjust as needed
-    
+        const cellSvgWidth = 600;
+        const cellSvgHeight = 500;
         const margin = {top: 60, right: 40, bottom: 60, left: 60};
     
-        // Loop over each source to create individual visualizations
-        sources.forEach((source, index) => {
+        const sources = ['KU', 'UL', 'AS', 'UT']; // 병원 소스 코드
+        let validSources = [];
+    
+        // 데이터 필터링: 각 소스에 데이터가 있는지 확인
+        sources.forEach(source => {
+            const sourceData = filteredData.filter(d => d.source === source);
+            if (sourceData.length > 0) {
+                validSources.push(source); // 데이터가 있는 소스만 추가
+            }
+        });
+    
+        const individualWidth = cellSvgWidth / 2; 
+        const individualHeight = cellSvgHeight / 2; 
+    
+        validSources.forEach((source, index) => {
             const svg = container.append("svg")
                 .attr("id", `cell-svg-${source}`)
                 .attr("width", individualWidth)
@@ -424,39 +466,44 @@ document.addEventListener('DOMContentLoaded', function() {
             drawCellVisualizationForSource(svg, source, margin, width, height);
         });
     }
+    
+    
     function drawCellVisualizationForSource(svg, source, margin, width, height) {
-        // Prepare data: columns = user_ids, rows = weeks
+        // 데이터 필터링: 현재 필터된 데이터 중 해당 source만
         const sourceData = filteredData.filter(d => d.source === source);
     
-        const weeks = 8; // Assuming 8 weeks
+        const weeks = 8; 
     
-        // Determine the start date to calculate week numbers
-        const sortedDates = sourceData.map(d => d.date).sort((a, b) => a - b);
-        const startDate = sortedDates[0];
+        // startDate 결정
+        const sortedDates = sourceData.map(d => d.date).sort((a, b) => new Date(a) - new Date(b));
+        const startDate = sortedDates[0] ? new Date(sortedDates[0]) : null;
     
-        // Function to calculate week number
+        if (!startDate) {
+            // 데이터가 없을 경우 메세지 표시
+
+            return;
+        }
+    
         function getWeekNumber(date) {
-            const diffTime = date - startDate;
-            const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1; // Week 1 to 8
+            const diffTime = new Date(date) - startDate;
+            const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
             return Math.min(diffWeeks, weeks);
         }
     
-        // Assign week numbers to data
         sourceData.forEach(d => {
             d.week = getWeekNumber(d.date);
         });
     
-        // Filter data based on selectedCluster
+        // 선택된 클러스터에 따른 데이터 필터링
         let dataToVisualize = sourceData;
         if (selectedCluster !== 'all') {
             dataToVisualize = sourceData.filter(d => d.cluster === selectedCluster);
         }
     
-        // Get user IDs from the data to visualize
-        const userIds = Array.from(new Set(dataToVisualize.map(d => d.user_id))).sort((a, b) => a - b);
+        const userIds = Array.from(new Set(dataToVisualize.map(d => d.user_id))).sort();
     
-        // If no users in this source for the selected cluster, skip drawing
         if (userIds.length === 0) {
+            // 해당 cluster나 조건에 맞는 유저 없음
             svg.append("text")
                 .attr("x", (width + margin.left + margin.right) / 2)
                 .attr("y", margin.top)
@@ -466,67 +513,67 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
     
-        // Create a nested data structure: user_id -> week -> data
+        // Nested Data: user_id -> week별 평균
         const nestedData = d3.group(dataToVisualize, d => d.user_id);
     
-        // Create a matrix: rows = weeks, columns = user_ids
         const matrix = [];
         for (let week = 1; week <= weeks; week++) {
             userIds.forEach(user_id => {
                 const userData = nestedData.get(user_id) || [];
                 const weekData = userData.filter(d => d.week === week);
-                // Aggregate data for the week
                 const avgPHQ9 = weekData.length > 0 ? d3.mean(weekData, d => d.PHQ9) : 0;
-                const avgCESD = weekData.length > 0 ? d3.mean(weekData, d => d.CESD) : 0;
-                const avgGAD7 = weekData.length > 0 ? d3.mean(weekData, d => d.GAD7) : 0;
                 matrix.push({
                     user_id,
                     week,
-                    PHQ9: avgPHQ9,
-                    CESD: avgCESD,
-                    GAD7: avgGAD7
+                    PHQ9: avgPHQ9
                 });
             });
         }
     
-        // Calculate cell size
-        const cellPadding = 2; // Spacing between cells
-        const cellSize = 30; // Increased cell size
+        const cellPadding = 2;
+        const cellSize = 30;
     
-        // Calculate total grid size
         const gridWidth = cellSize * userIds.length + cellPadding * (userIds.length - 1);
         const gridHeight = cellSize * weeks + cellPadding * (weeks - 1);
     
-        // Adjust SVG size if necessary
         svg.attr("width", gridWidth + margin.left + margin.right)
            .attr("height", gridHeight + margin.top + margin.bottom);
     
-        // Adjust margins to center the grid
         const g = svg.append("g")
-                    .attr("transform", `translate(${margin.left},${margin.top})`);
+            .attr("transform", `translate(${margin.left},${margin.top})`);
     
-        // Scales
         const x = d3.scaleBand()
-                    .domain(userIds)
-                    .range([0, gridWidth])
-                    .padding(0);
+            .domain(userIds)
+            .range([0, gridWidth])
+            .padding(0);
     
         const y = d3.scaleBand()
-                    .domain(d3.range(1, weeks + 1))
-                    .range([0, gridHeight])
-                    .padding(0);
+            .domain(d3.range(1, weeks + 1))
+            .range([0, gridHeight])
+            .padding(0);
     
-        // Color Scale from Blue to Red for PHQ9
         const colorScale = d3.scaleLinear()
-                             .domain([0, 100])
-                             .range(["#ffffff", "#ff0000"]);
+            .domain([0, 100])
+            .range(["#ffffff", "#ff0000"]);
     
-        // Tooltip
         const tooltip = d3.select("body").append("div")
                           .attr("class", "tooltip")
-                          .style("display", "none");
-    
-        // Draw cells
+                          .style("display", "none")
+                          .style("position", "absolute")
+                          .style("background-color", "#fff")
+                          .style("border", "1px solid #ccc")
+                          .style("padding", "8px")
+                          .style("border-radius", "4px")
+                          .style("pointer-events", "none")
+                          .style("font-size", "12px");
+        
+        const sourceMapping = {
+            'KU': 'Kangwon National University Hospital',
+            'UL': 'Ulsan National University Hospital',
+            'AS': 'Seoul Asan Medical Center',
+            'UT': 'UNIST'
+        };
+
         g.selectAll("rect")
             .data(matrix)
             .enter()
@@ -537,7 +584,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .attr("height", cellSize)
             .attr("fill", d => colorScale(d.PHQ9))
             .attr("stroke", "#ccc")
-            .attr("opacity", 1)
             .on("mouseover", function(event, d) {
                 d3.select(this).attr("stroke", "#000");
                 tooltip.style("display", "block")
@@ -551,16 +597,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 d3.select(this).attr("stroke", "#ccc");
                 tooltip.style("display", "none");
             })
-            // Add this click handler
             .on("click", function(event, d) {
-                drawUserBarCharts(d.user_id, source); // Pass source as well
-                drawPersonalInfo(d.user_id); // 추가된 부분: Personal Info 업데이트
+                drawUserBarCharts(d.user_id, source);
+                drawPersonalInfo(d.user_id);  // Personal Information 갱신 호출
 
             });
     
-        // Adjust x and y axes to align ticks with cell centers
         const xAxis = d3.axisTop(x)
                         .tickSize(0)
+                        .tickFormat(d => d.slice(0, 2) + d.slice(4)) // 3, 4번째 글자 제거
                         .tickPadding(5);
     
         const yAxis = d3.axisLeft(y)
@@ -568,7 +613,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         .tickFormat(d => `W${d}`)
                         .tickPadding(5);
     
-        // Draw axes
         g.append("g")
             .attr("transform", `translate(0,0)`)
             .call(xAxis)
@@ -580,118 +624,111 @@ document.addEventListener('DOMContentLoaded', function() {
             .selectAll("text")
             .style("text-anchor", "end");
     
-        // Title
+        
+
         svg.append("text")
             .attr("x", (gridWidth + margin.left + margin.right) / 2)
             .attr("y", margin.top - 30)
             .attr("text-anchor", "middle")
-            .style("font-size", "14px")
-            .text(`Source: ${source}`);
-    
+            .style("font-size", "18px")
+            .text(`Source: ${sourceMapping[source] || source}`);
+
         svg.append("text")
             .attr("x", (gridWidth + margin.left + margin.right) / 2)
             .attr("y", margin.top - 10)
             .attr("text-anchor", "middle")
-            .style("font-size", "12px")
-            .text(`Cluster ${selectedCluster !== 'all' ? selectedCluster : 'All'} - AVG`);
-    
-        // Draw Feature Graph if a feature is selected
-        if (selectedFeature && selectedUserId && userIds.includes(selectedUserId)) {
+            .style("font-size", "12px")    
+        // selectedUserId와 selectedFeature가 정의되어 있고 해당 유저가 userIds에 포함될 때만 Feature Graph를 보여주기
+        if (typeof selectedUserId !== 'undefined' && typeof selectedFeature !== 'undefined' && 
+            selectedUserId !== null && selectedFeature !== null &&
+            userIds.includes(selectedUserId)) {
             drawFeatureGraphInCell(g, x(selectedUserId), gridHeight + cellPadding * (weeks - 1) + 20, cellSize, selectedUserId, source);
         }
     }
     
-// Draw Feature Graph in the Cell Visualization aligned with the selected user
-function drawFeatureGraphInCell(container, xPosition, yPosition, cellSize, userId, source) {
-    const userFeatureData = filteredData.filter(d => d.user_id === userId && d.source === source && d[selectedFeature] !== null && !isNaN(d[selectedFeature]));
-
-    if (userFeatureData.length === 0) return;
-
-    const width = cellSize;
-    const height = 100; // Height of the feature graph
-
-    const x = d3.scaleTime()
-                .domain(d3.extent(userFeatureData, d => d.date))
-                .range([0, width]);
-
-    const y = d3.scaleLinear()
-                .domain([0, d3.max(userFeatureData, d => +d[selectedFeature])]).nice()
-                .range([height, 0]);
-
-    // Define the line with a smooth curve
-    const line = d3.line()
-                .curve(d3.curveMonotoneX)
-                .x(d => x(d.date))
-                .y(d => y(+d[selectedFeature]));
-
-    // Define the area under the line
-    const area = d3.area()
-                .curve(d3.curveMonotoneX)
-                .x(d => x(d.date))
-                .y0(height)
-                .y1(d => y(+d[selectedFeature]));
-
-    const gradientId = `gradient-${userId}-${selectedFeature}-${source}`;
-    const filterId = `dropshadow-${userId}-${selectedFeature}-${source}`;
-
-    const defs = container.append("defs");
-
-    // Define a gradient for the area fill
-    const gradient = defs.append("linearGradient")
-        .attr("id", gradientId)
-        .attr("x1", "0%").attr("y1", "0%")
-        .attr("x2", "0%").attr("y2", "100%");
-
-    gradient.append("stop")
-        .attr("offset", "0%")
-        .attr("stop-color", "#007BFF")
-        .attr("stop-opacity", 0.8);
-
-    gradient.append("stop")
-        .attr("offset", "100%")
-        .attr("stop-color", "#FFFFFF")
-        .attr("stop-opacity", 0);
-
-    // Define a drop shadow filter
-    const filter = defs.append("filter")
-        .attr("id", filterId)
-        .attr("height", "130%");
-
-    filter.append("feGaussianBlur")
-        .attr("in", "SourceAlpha")
-        .attr("stdDeviation", 3)
-        .attr("result", "blur");
-
-    filter.append("feOffset")
-        .attr("in", "blur")
-        .attr("dx", 2)
-        .attr("dy", 2)
-        .attr("result", "offsetBlur");
-
-    const feMerge = filter.append("feMerge");
-
-    feMerge.append("feMergeNode")
-        .attr("in", "offsetBlur");
-    feMerge.append("feMergeNode")
-        .attr("in", "SourceGraphic");
-
-    // Draw the area under the line with gradient fill
-    container.append("path")
-        .datum(userFeatureData)
-        .attr("fill", `url(#${gradientId})`)
-        .attr("d", area)
-        .attr("transform", `translate(${xPosition},${yPosition})`);
-
-    // Draw the smooth line with drop shadow
-    container.append("path")
-        .datum(userFeatureData)
-        .attr("fill", "none")
-        .attr("stroke", "#007BFF")
-        .attr("stroke-width", 2)
-        .attr("d", line)
-        .attr("filter", `url(#${filterId})`)
-        .attr("transform", `translate(${xPosition},${yPosition})`);
-}
+    function drawFeatureGraphInCell(container, xPosition, yPosition, cellSize, userId, source) {
+        const userFeatureData = filteredData.filter(d => d.user_id === userId && d.source === source && d[selectedFeature] !== null && !isNaN(d[selectedFeature]));
+    
+        if (userFeatureData.length === 0) return;
+    
+        const width = cellSize;
+        const height = 100; 
+    
+        const x = d3.scaleTime()
+                    .domain(d3.extent(userFeatureData, d => new Date(d.date)))
+                    .range([0, width]);
+    
+        const y = d3.scaleLinear()
+                    .domain([0, d3.max(userFeatureData, d => +d[selectedFeature])]).nice()
+                    .range([height, 0]);
+    
+        const line = d3.line()
+                    .curve(d3.curveMonotoneX)
+                    .x(d => x(new Date(d.date)))
+                    .y(d => y(+d[selectedFeature]));
+    
+        const area = d3.area()
+                    .curve(d3.curveMonotoneX)
+                    .x(d => x(new Date(d.date)))
+                    .y0(height)
+                    .y1(d => y(+d[selectedFeature]));
+    
+        const gradientId = `gradient-${userId}-${selectedFeature}-${source}`;
+        const filterId = `dropshadow-${userId}-${selectedFeature}-${source}`;
+    
+        const defs = container.append("defs");
+    
+        const gradient = defs.append("linearGradient")
+            .attr("id", gradientId)
+            .attr("x1", "0%").attr("y1", "0%")
+            .attr("x2", "0%").attr("y2", "100%");
+    
+        gradient.append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", "#007BFF")
+            .attr("stop-opacity", 0.8);
+    
+        gradient.append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", "#FFFFFF")
+            .attr("stop-opacity", 0);
+    
+        const filter = defs.append("filter")
+            .attr("id", filterId)
+            .attr("height", "130%");
+    
+        filter.append("feGaussianBlur")
+            .attr("in", "SourceAlpha")
+            .attr("stdDeviation", 3)
+            .attr("result", "blur");
+    
+        filter.append("feOffset")
+            .attr("in", "blur")
+            .attr("dx", 2)
+            .attr("dy", 2)
+            .attr("result", "offsetBlur");
+    
+        const feMerge = filter.append("feMerge");
+        feMerge.append("feMergeNode").attr("in", "offsetBlur");
+        feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+    
+        container.append("path")
+            .datum(userFeatureData)
+            .attr("fill", `url(#${gradientId})`)
+            .attr("d", area)
+            .attr("transform", `translate(${xPosition},${yPosition})`);
+    
+        container.append("path")
+            .datum(userFeatureData)
+            .attr("fill", "none")
+            .attr("stroke", "#007BFF")
+            .attr("stroke-width", 2)
+            .attr("d", line)
+            .attr("filter", `url(#${filterId})`)
+            .attr("transform", `translate(${xPosition},${yPosition})`);
+    }
+    
+    
     
     // Function to draw bar charts for the selected user
 function drawUserBarCharts(user_id, source) {
@@ -741,7 +778,7 @@ function drawUserBarCharts(user_id, source) {
     scores.forEach(score => {
         // Create SVG for each bar chart
         const svgWidth = 500;
-        const svgHeight = 400;
+        const svgHeight = 350;
         const margin = { top: 40, right: 20, bottom: 60, left: 50 };
         const width = svgWidth - margin.left - margin.right;
         const height = svgHeight - margin.top - margin.bottom;
@@ -762,7 +799,7 @@ function drawUserBarCharts(user_id, source) {
 
         // Y scale
         const y = d3.scaleLinear()
-            .domain([0, d3.max(dataByWeek, d => d[score])]).nice()
+            .domain([0, 100]).nice()
             .range([height, 0]);
 
         // X axis
@@ -917,6 +954,7 @@ function drawFeatureGraph(feature, container) {
     
         // 중요도 순으로 내림차순 정렬
         importanceScores.sort((a, b) => b.score - a.score);
+        const topImportanceScores = importanceScores.slice(0, 10);
     
         // 중요도 테이블 생성
         const importanceContainer = d3.select("#importance-table-container");
@@ -936,7 +974,7 @@ function drawFeatureGraph(feature, container) {
     
         // 테이블 행
         const rows = tbody.selectAll("tr")
-            .data(importanceScores)
+            .data(topImportanceScores)
             .enter()
             .append("tr");
     
@@ -948,8 +986,8 @@ function drawFeatureGraph(feature, container) {
         // 기존 히트맵 코드 계속...
         // Create SVG container
         const margin = { top: 100, right: 100, bottom: 10, left: 130 };
-        const svgWidth = 700;
-        const svgHeight = 600;
+        const svgWidth = 600;
+        const svgHeight = 500;
         const width = svgWidth - margin.left - margin.right;
         const height = svgHeight - margin.top - margin.bottom;
     
@@ -1111,147 +1149,174 @@ function drawFeatureGraph(feature, container) {
     
     
 
-    function drawPersonalInfo(user_id) {
-        const userData = filteredData.filter(d => d.user_id === user_id);
-    
-        if (userData.length === 0) {
-            // 데이터가 없으면 초기화
-            d3.select("#info-user-id").text("");
-            d3.select("#info-source").text("");
-            d3.select("#info-cluster").text("");
-            d3.select("#info-phq9").text("");
-            d3.select("#info-cesd").text("");
-            d3.select("#info-gad7").text("");
-            d3.select("#info-risk-week").text("");
-            d3.select("#personal-bar-chart-container").html("");
-            return;
-        }
-    
-        const userSources = Array.from(new Set(userData.map(d => d.source)));
-        const sourceStr = userSources.join(", ");
-        const userClusters = Array.from(new Set(userData.map(d => d.cluster)));
-        const clusterStr = userClusters.join(", ");
-    
-        const avgPHQ9 = d3.mean(userData, d => d.PHQ9);
-        const avgCESD = d3.mean(userData, d => d.CESD);
-        const avgGAD7 = d3.mean(userData, d => d.GAD7);
-    
-        d3.select("#info-user-id").text(user_id);
-        d3.select("#info-source").text(sourceStr);
-        d3.select("#info-cluster").text(clusterStr);
-        d3.select("#info-phq9").text(avgPHQ9 ? avgPHQ9.toFixed(2) : "N/A");
-        d3.select("#info-cesd").text(avgCESD ? avgCESD.toFixed(2) : "N/A");
-        d3.select("#info-gad7").text(avgGAD7 ? avgGAD7.toFixed(2) : "N/A");
-    
-        // 주별 평균 데이터 생성
-        // 시작 날짜
-        const sortedDates = userData.map(d => d.date).sort((a,b) => a-b);
-        const startDate = sortedDates[0];
-    
-        function getWeekNumber(date) {
-            const diffTime = date - startDate;
-            const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1; 
-            return diffWeeks;
-        }
-    
-        userData.forEach(d => {
-            d.week = getWeekNumber(d.date);
-        });
-    
-        const weeks = d3.range(1, 9); // 1~8주 가정
-        const weeklyData = weeks.map(week => {
-            const weekData = userData.filter(d => d.week === week);
-            return {
-                week: week,
-                PHQ9: weekData.length > 0 ? d3.mean(weekData, d => d.PHQ9) : 0,
-                CESD: weekData.length > 0 ? d3.mean(weekData, d => d.CESD) : 0,
-                GAD7: weekData.length > 0 ? d3.mean(weekData, d => d.GAD7) : 0
-            };
-        });
-    
-        // 위험 주간(가장 PHQ9가 높은 주) 찾기
-        let maxPHQ9 = -Infinity;
-        let riskWeek = null;
-        weeklyData.forEach(d => {
-            if (d.PHQ9 > maxPHQ9) {
-                maxPHQ9 = d.PHQ9;
-                riskWeek = d.week;
-            }
-        });
-    
-        d3.select("#info-risk-week").text(riskWeek ? `Week ${riskWeek}` : "N/A");
-    
-        drawPersonalLineChart(weeklyData);
+    // 클러스터 스캐터 플롯 내에서 사용자를 클릭했을 때 selectedUserId 설정 후 personal info 업데이트
+// 이 부분은 drawClusteringScatterPlot() 함수 내 circle.on("click") 핸들러에서 이미 구현했을 것으로 가정
+// 예:
+// .on("click", function(event, d) {
+//    selectedUserId = d.user_id; // 문자열 user_id
+//    drawPersonalInfo(selectedUserId);
+//    ...
+// });
+
+function drawPersonalInfo(user_id) {
+    // user_id에 해당하는 데이터 필터
+    const userData = filteredData.filter(d => d.user_id === user_id);
+
+    const sourceMapping = {
+        'KU': 'Kangwon National University Hospital',
+        'UL': 'Ulsan National University Hospital',
+        'AS': 'Seoul Asan Medical Center',
+        'UT': 'UNIST'
+    };
+
+    // 데이터가 없으면 테이블 초기화
+    if (userData.length === 0) {
+        d3.select("#info-user-id").text("");
+        d3.select("#info-source").text("");
+        d3.select("#info-group").text("");
+        d3.select("#info-cluster").text("");
+        d3.select("#info-phq9").text("");
+        d3.select("#info-cesd").text("");
+        d3.select("#info-gad7").text("");
+        d3.select("#info-risk-week").text("");
+        d3.select("#personal-bar-chart-container").html("");
+        return;
     }
-    
-    function drawPersonalLineChart(weeklyData) {
-        const container = d3.select("#personal-bar-chart-container");
-        container.html(""); // 이전 내용 제거
-    
-        const svgWidth = 500;
-        const svgHeight = 400;
-        const margin = {top: 30, right: 100, bottom: 50, left: 50};
-        const width = svgWidth - margin.left - margin.right;
-        const height = svgHeight - margin.top - margin.bottom;
-    
-        const svg = container.append("svg")
-            .attr("width", svgWidth)
-            .attr("height", svgHeight);
-    
-        const g = svg.append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
-    
-        const x = d3.scaleLinear()
-            .domain([1, d3.max(weeklyData, d => d.week)])
-            .range([0, width]);
-    
-        const y = d3.scaleLinear()
-            .domain([0, d3.max(weeklyData, d => Math.max(d.PHQ9, d.CESD, d.GAD7))]).nice()
-            .range([height, 0]);
-    
-        const xAxis = d3.axisBottom(x).ticks(8).tickFormat(d => `W${d}`);
-        const yAxis = d3.axisLeft(y);
-    
-        g.append("g")
-            .attr("transform", `translate(0,${height})`)
-            .call(xAxis)
-            .selectAll("text")
-            .attr("transform", "rotate(-45)")
-            .attr("text-anchor", "end");
-    
-        g.append("g")
-            .call(yAxis);
-    
-        const line = d3.line()
-            .x(d => x(d.week))
-            .y(d => y(d.value))
-            .curve(d3.curveMonotoneX);
-    
-        // 세 가지 메트릭을 한 그래프에
-        const metrics = [
-            {name: "PHQ9", color: "steelblue"},
-            {name: "CESD", color: "green"},
-            {name: "GAD7", color: "orange"}
-        ];
-    
-        metrics.forEach(metric => {
-            const metricData = weeklyData.map(d => ({week: d.week, value: d[metric.name]}));
-            g.append("path")
-                .datum(metricData)
-                .attr("fill", "none")
-                .attr("stroke", metric.color)
-                .attr("stroke-width", 2)
-                .attr("d", line);
-    
-            // 범례
-            svg.append("text")
-                .attr("x", width + margin.left + 20)
-                .attr("y", margin.top + metrics.indexOf(metric)*20)
-                .attr("fill", metric.color)
-                .style("font-size", "14px")
-                .text(metric.name);
-        });
+
+    // 해당 user의 source, group, cluster 정보 추출
+    const userSources = Array.from(new Set(userData.map(d => d.source)))
+        .map(source => sourceMapping[source]); // 소스 매핑 적용
+    const sourceStr = userSources.join(", ");
+
+    const userClusters = Array.from(new Set(userData.map(d => d.cluster)));
+    const clusterStr = userClusters.join(", ");
+
+    const userGroup = userData[0].group; // 동일 user_id 내 group은 동일하다고 가정
+
+    // 평균값 계산
+    const avgPHQ9 = d3.mean(userData, d => d.PHQ9);
+    const avgCESD = d3.mean(userData, d => d.CESD);
+    const avgGAD7 = d3.mean(userData, d => d.GAD7);
+
+    // 테이블 업데이트
+    d3.select("#info-user-id").text(user_id);
+    d3.select("#info-source").text(sourceStr);
+    d3.select("#info-group").text(userGroup);
+    d3.select("#info-cluster").text(clusterStr);
+    d3.select("#info-phq9").text(avgPHQ9 ? avgPHQ9.toFixed(2) : "N/A");
+    d3.select("#info-cesd").text(avgCESD ? avgCESD.toFixed(2) : "N/A");
+    d3.select("#info-gad7").text(avgGAD7 ? avgGAD7.toFixed(2) : "N/A");
+
+    // 주차별 데이터 준비
+    const sortedDates = userData.map(d => new Date(d.date)).sort((a,b) => a-b);
+    const startDate = sortedDates[0];
+
+    // 주차 계산 함수
+    function getWeekNumber(date) {
+        const diffTime = new Date(date) - startDate;
+        const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1; 
+        return diffWeeks;
     }
-    
+
+    userData.forEach(d => {
+        d.week = getWeekNumber(d.date);
+    });
+
+    const weeks = d3.range(1, 9); // 1~8주 가정
+
+    const weeklyData = weeks.map(week => {
+        const weekData = userData.filter(d => d.week === week);
+        return {
+            week: week,
+            PHQ9: weekData.length > 0 ? d3.mean(weekData, d => d.PHQ9) : 0,
+            CESD: weekData.length > 0 ? d3.mean(weekData, d => d.CESD) : 0,
+            GAD7: weekData.length > 0 ? d3.mean(weekData, d => d.GAD7) : 0
+        };
+    });
+
+    // 위험 주간(PHQ9 최대) 계산
+    let maxPHQ9 = -Infinity;
+    let riskWeek = null;
+    weeklyData.forEach(d => {
+        if (d.PHQ9 > maxPHQ9) {
+            maxPHQ9 = d.PHQ9;
+            riskWeek = d.week;
+        }
+    });
+
+    d3.select("#info-risk-week").text(riskWeek ? `Week ${riskWeek}` : "N/A");
+
+    // 라인차트 그리기 (personal-bar-chart-container를 라인차트로 사용)
+    drawPersonalLineChart(weeklyData);
+}
+
+function drawPersonalLineChart(weeklyData) {
+    const container = d3.select("#personal-bar-chart-container");
+    container.html("");
+
+    const svgWidth = 500;
+    const svgHeight = 350;
+    const margin = {top: 30, right: 100, bottom: 50, left: 50};
+    const width = svgWidth - margin.left - margin.right;
+    const height = svgHeight - margin.top - margin.bottom;
+
+    const svg = container.append("svg")
+        .attr("width", svgWidth)
+        .attr("height", svgHeight);
+
+    const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleLinear()
+        .domain([1, d3.max(weeklyData, d => d.week)])
+        .range([0, width]);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(weeklyData, d => Math.max(d.PHQ9, d.CESD, d.GAD7))]).nice()
+        .range([height, 0]);
+
+    const xAxis = d3.axisBottom(x).ticks(8).tickFormat(d => `W${d}`);
+    const yAxis = d3.axisLeft(y);
+
+    g.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(xAxis)
+        .selectAll("text")
+        .attr("transform", "rotate(-45)")
+        .attr("text-anchor", "end");
+
+    g.append("g")
+        .call(yAxis);
+
+    const line = d3.line()
+        .x(d => x(d.week))
+        .y(d => y(d.value))
+        .curve(d3.curveMonotoneX);
+
+    const metrics = [
+        {name: "PHQ9", color: "steelblue"},
+        {name: "CESD", color: "green"},
+        {name: "GAD7", color: "orange"}
+    ];
+
+    metrics.forEach(metric => {
+        const metricData = weeklyData.map(d => ({week: d.week, value: d[metric.name]}));
+        g.append("path")
+            .datum(metricData)
+            .attr("fill", "none")
+            .attr("stroke", metric.color)
+            .attr("stroke-width", 2)
+            .attr("d", line);
+
+        // 범례
+        svg.append("text")
+            .attr("x", width + margin.left + 20)
+            .attr("y", margin.top + metrics.indexOf(metric)*20)
+            .attr("fill", metric.color)
+            .style("font-size", "14px")
+            .text(metric.name);
+    });
+}
+
 
 });

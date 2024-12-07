@@ -27,25 +27,26 @@
             <input type="date" id="end-date">
             <h2>Sources</h2>
             <div id="sources-list"></div>
+            <h2>Group</h2>
+            <div id="group-list"></div>
+            <h2>Cluster Selection</h2>
+            <select id="cluster-dropdown"></select>
             <h2>Features</h2>
             <ul id="features"></ul>
+            
         </div>
         <div id="main-content">
-            <div class="card">
-                <h2>Cluster Selection</h2>
-                <select id="cluster-dropdown"></select>
-            </div>
             <!-- 수정된 부분 시작 -->
             <div class="card" id="cluster-and-heatmap-container">
                 <div class="visualization" id="cluster-visualization" div style = "width: 30%;">
                     <h2>Clustering Scatter Plot</h2>
-                    <svg id="cluster-svg" width="100%" height="600"></svg>
+                    <svg id="cluster-svg" width="100%" height="500"></svg>
                 </div>
                 <div class="visualization" id="heatmap-visualization" div style = "width: 30%;">
                     <h2>Correlation Heatmap</h2>
                     <div id="correlation-heatmap-container"></div>
                 </div>
-                <div class="visualization" id="importance-table-visualization" style="width: 15%;">
+                <div class="visualization" id="importance-table-visualization" style="width: 20%;">
                     <h2>Importance Table</h2>
                     <div id="importance-table-container"></div>
                 </div>
@@ -59,12 +60,14 @@
                 </div>
             </div>
             <div class="card2">
-                <div class="card-section2" id="personal-info-wrapper">
-                    <h2>Personal Information</h2>
+                <!-- Personal Information - Table -->
+                <div class="card-section2" id="personal-info-table-wrapper">
+                    <h2>Personal Information - Table</h2>
                     <div id="personal-info-container">
                         <table id="personal-info-table">
                             <tr><th>User ID</th><td id="info-user-id"></td></tr>
                             <tr><th>Source</th><td id="info-source"></td></tr>
+                            <tr><th>Group</th><td id="info-group"></td></tr>
                             <tr><th>Cluster</th><td id="info-cluster"></td></tr>
                             <tr><th>PHQ9</th><td id="info-phq9"></td></tr>
                             <tr><th>CESD</th><td id="info-cesd"></td></tr>
@@ -72,14 +75,22 @@
                             <tr><th>Risk Week</th><td id="info-risk-week"></td></tr>
                         </table>
                     </div>
+                </div>
+            
+                <!-- Personal Information - Chart -->
+                <div class="card-section2" id="personal-info-chart-wrapper">
+                    <h2>Personal Information - Chart</h2>
                     <div id="personal-bar-chart-container"></div>
                 </div>
-                
-                <div class="card-section2">
+            
+                <!-- Mental Health Test (Weekly View) -->
+                <div class="card-section2" id="mental-health-test-wrapper">
                     <h2>Mental Health Test (Weekly View)</h2>
                     <div id="bar-chart-container"></div>
                 </div>
-            </div>           
+            </div>
+            
+                  
         </div>
     </div>
 </body>

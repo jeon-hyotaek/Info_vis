@@ -63,6 +63,16 @@ header h1 {
     margin-right: 10px;
 }
 
+#group-list label {
+    display: block;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+#group-list input[type="checkbox"] {
+    margin-right: 10px;
+}
+
 #features {
     list-style: none;
     padding: 0;
@@ -136,6 +146,7 @@ svg {
 #cluster-and-heatmap-container {
     display: flex;
     flex-wrap: wrap;
+    gap: 3%;
 }
 
 .visualization {
@@ -151,45 +162,41 @@ svg {
 /* 각 시각화의 SVG 및 컨테이너에 대한 스타일 조정 */
 #cluster-svg,
 #correlation-heatmap-container {
-    width: 100%;
+    width: 600px;
     height: auto;
     border: 1px solid #ccc;
     background-color: #fff;
 }
 
-/* 중요도 테이블 스타일 */
-#importance-table-visualization {
-    height: 100%;
-    width: 300;
+/* 중요도 테이블 스타일 */#importance-table-visualization {
+    height: 500px;
+    width: 400px;
+    flex: 0 0 30%;
     background-color: #fff;
-
 /*    overflow-y: auto;  테이블 내용이 넘칠 경우 스크롤 생성 */
 }
 
 .importance-table {
-    height: 50%; /* 테이블 높이를 부모 높이인 600px에 맞춤 */
-    width: 50%;
-    border-collapse: collapse;
-}
-
-
-.importance-table {
-    width: 300;
-    height: 600;
+    width: 49%; /* 부모 요소 너비에 맞게 설정 */
+    height: 100%; /* 부모 요소 높이에 맞게 설정 */
     border-collapse: collapse;
     margin-top: 10px;
 }
 
 .importance-table th, .importance-table td {
     border: 1px solid #ccc;
-    padding: 4.5px;
-    text-align: left;
+    padding: 10px; /* 셀 내부 여백 조정 */
+    text-align: center; /* 텍스트를 가운데 정렬 */
+    font-size: 18px; /* 폰트 크기 확대 */
 }
 
 .importance-table th {
     background-color: #f2f2f2;
     font-weight: bold;
+    font-size: 18px; /* 헤더 폰트 크기 확대 */
+    text-align: center; /* 헤더 텍스트도 가운데 정렬 */
 }
+
 
 #bar-chart-container {
     margin-top: 20px;
@@ -222,7 +229,7 @@ svg {
 #personal-info-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 20px;
     margin-top: 10px;
 }
 
@@ -230,21 +237,17 @@ svg {
     text-align: left;
     background: #f2f2f2;
     padding: 8px;
-    width: 80px;
+    width: 120px;
 }
 
 #personal-info-table td {
-    padding: 8px;
+
     border-bottom: 1px solid #ccc;
 }
 
 /* 바 차트 컨테이너 스타일 */
 #personal-bar-chart-container {
-    width: 100%;
     height: 100%;
- 
-    border: 1px solid #ccc;
-    background: #fff;
 }
 
 #personal-info-wrapper {
@@ -259,37 +262,66 @@ svg {
     padding: 10px;
 }
 
+#cluster-visualization {
+    flex: 0 0 20%; /* 25% 크기 설정 */
+}
+
+#heatmap-visualization {
+    flex: 0 0 20%; /* 25% 크기 설정 */
+}
+
+
+
+#personal-info-table-wrapper {
+    flex: 0 0 20%; /* 25% 크기 설정 */
+}
+
+#personal-info-chart-wrapper {
+    flex: 0 0 15%; /* 25% 크기 설정 */
+}
+
+#mental-health-test-wrapper {
+    flex: 0 0 58%; /* 50% 크기 설정 */
+}
+
+@media (max-width: 768px) {
+    #personal-info-wrapper {
+        flex-direction: column;
+        gap: 2px; /* 작은 화면에서 간격 증가 */
+    }
+    #personal-info-table-wrapper,
+    #personal-info-chart-wrapper,
+    #mental-health-test-wrapper {
+        flex: none;
+        width: 100%; /* 모든 요소가 세로로 배치 */
+    }
+}
 
 .card2 {
     background-color: #fff;
     border-radius: 5px;
     padding: 15px;
     margin-bottom: 20px;
-    box-sizing: border-box; /* 추가 */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: flex-start;
 }
 
 .card-section2 {
-    flex: 0 0 auto;
-    min-width: 300px;
+    width: auto;
     margin: 10px;
 }
 
 .card-section2:first-child {
-    flex-basis: 20%;
-    margin-left: 5%;
+    flex-basis: 30%;
+
 }
 
 .card-section2:last-child {
-    flex-basis: 65%;
+    flex-basis: 54%;
 }
 
 .card-section2 h2 {
-    text-align: center;
+    text-align: left;
 }
 
 #feature-graph-container,
