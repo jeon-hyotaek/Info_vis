@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MindLens Visualization</title>
+    <!-- Include D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Include math.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.6.4/math.min.js"></script>
+    <!-- Include your script.js -->
+    <script src="script.js" defer></script>
+    <!-- Include styles.css -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+            <h1>MindLens</h1>
+            <h2>Filters</h2>
+            <label for="start-date">Start Date:</label>
+            <input type="date" id="start-date">
+            <label for="end-date">End Date:</label>
+            <input type="date" id="end-date">
+            <h2>Sources</h2>
+            <div id="sources-list"></div>
+            <h2>Features</h2>
+            <ul id="features"></ul>
+        </div>
+        <div id="main-content">
+            <div class="card">
+                <h2>Cluster Selection</h2>
+                <select id="cluster-dropdown"></select>
+            </div>
+            <!-- 수정된 부분 시작 -->
+            <div class="card" id="cluster-and-heatmap-container">
+                <div class="visualization" id="cluster-visualization" div style = "width: 30%;">
+                    <h2>Clustering Scatter Plot</h2>
+                    <svg id="cluster-svg" width="100%" height="600"></svg>
+                </div>
+                <div class="visualization" id="heatmap-visualization" div style = "width: 30%;">
+                    <h2>Correlation Heatmap</h2>
+                    <div id="correlation-heatmap-container"></div>
+                </div>
+                <div class="visualization" id="importance-table-visualization" style="width: 15%;">
+                    <h2>Importance Table</h2>
+                    <div id="importance-table-container"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Heatmap (Matrix) Visualization</h2>
+                <!-- Updated cell visualization container -->
+                <div id="cell-container">
+                    <svg id="cell-svg"></svg>
+                </div>
+            </div>
+            <div class="card2">
+                <div class="card-section2" id="personal-info-wrapper">
+                    <h2>Personal Information</h2>
+                    <div id="personal-info-container">
+                        <table id="personal-info-table">
+                            <tr><th>User ID</th><td id="info-user-id"></td></tr>
+                            <tr><th>Source</th><td id="info-source"></td></tr>
+                            <tr><th>Cluster</th><td id="info-cluster"></td></tr>
+                            <tr><th>PHQ9</th><td id="info-phq9"></td></tr>
+                            <tr><th>CESD</th><td id="info-cesd"></td></tr>
+                            <tr><th>GAD7</th><td id="info-gad7"></td></tr>
+                            <tr><th>Risk Week</th><td id="info-risk-week"></td></tr>
+                        </table>
+                    </div>
+                    <div id="personal-bar-chart-container"></div>
+                </div>
+                
+                <div class="card-section2">
+                    <h2>Mental Health Test (Weekly View)</h2>
+                    <div id="bar-chart-container"></div>
+                </div>
+            </div>           
+        </div>
+    </div>
+</body>
+</html>

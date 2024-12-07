@@ -1,0 +1,304 @@
+/* styles.css */
+
+body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #ecf0f1;
+}
+
+header {
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    padding: 15px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+#container {
+    display: flex;
+    height: calc(100vh - 60px); /* Adjusted for header height */
+}
+
+#sidebar {
+    flex: 0 0 400px; /* 기존 300px에서 350px로 증가 */
+    background-color: #34495e;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    color: #ecf0f1;
+    
+}
+
+
+#sidebar h2 {
+    color: #ecf0f1;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 10px;
+    margin-top: 20px;
+}
+
+#sidebar label {
+    display: block;
+    margin-top: 15px;
+}
+
+#sidebar input[type="date"] {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: none;
+    border-radius: 3px;
+}
+
+#sources-list label {
+    display: block;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+#sources-list input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+#features {
+    list-style: none;
+    padding: 0;
+}
+
+#features li {
+    padding: 8px;
+    margin-top: 5px;
+    background-color: #3b5998;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#features li:hover {
+    background-color: #4c70ba;
+}
+
+#features li.selected {
+    background-color: #e74c3c;
+}
+
+#main-content {
+    flex: 1;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    background-color: #ecf0f1;
+    color: #2c3e50;
+}
+
+.card {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-sizing: border-box; /* 추가 */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.card h2 {
+    margin-top: 0;
+}
+
+select {
+    width: 100%;
+    padding: 8px;
+    font-size: 16px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 3px;
+}
+
+svg {
+    border: 1px solid #ccc;
+    background-color: #fff;
+}
+
+.tooltip {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    pointer-events: none;
+    opacity: 0.9;
+    font-size: 12px;
+    border-radius: 4px;
+}
+
+/* 새로운 스타일 추가 */
+#cluster-and-heatmap-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.visualization {
+    flex: 1;
+    box-sizing: border-box;
+    padding: 10px;
+}
+
+.visualization h2 {
+    margin-top: 0;
+}
+
+/* 각 시각화의 SVG 및 컨테이너에 대한 스타일 조정 */
+#cluster-svg,
+#correlation-heatmap-container {
+    width: 100%;
+    height: auto;
+    border: 1px solid #ccc;
+    background-color: #fff;
+}
+
+/* 중요도 테이블 스타일 */
+#importance-table-visualization {
+    height: 100%;
+    width: 300;
+    background-color: #fff;
+
+/*    overflow-y: auto;  테이블 내용이 넘칠 경우 스크롤 생성 */
+}
+
+.importance-table {
+    height: 50%; /* 테이블 높이를 부모 높이인 600px에 맞춤 */
+    width: 50%;
+    border-collapse: collapse;
+}
+
+
+.importance-table {
+    width: 300;
+    height: 600;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.importance-table th, .importance-table td {
+    border: 1px solid #ccc;
+    padding: 4.5px;
+    text-align: left;
+}
+
+.importance-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+#bar-chart-container {
+    margin-top: 20px;
+}
+
+.feature-graph {
+    width: calc(100%); /* 전체 배경 크기 */
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    background-color: #fff; /* 칸의 배경 유지 */
+    border-radius: 4px;
+    box-sizing: border-box;
+    position: relative; /* 그래프 배치에 영향을 주지 않음 */
+}
+
+.feature-graph svg {
+    width: 100%; /* 그래프 너비를 줄임 */
+    height: auto; /* 높이를 자동으로 조정 */
+    margin: 0 auto; /* 중앙 정렬 */
+    display: block; /* SVG를 블록 요소로 설정 */
+}
+
+
+/* Personal Information 섹션 테이블 스타일 */
+#personal-info-container {
+    margin-bottom: 20px;
+}
+
+#personal-info-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+#personal-info-table th {
+    text-align: left;
+    background: #f2f2f2;
+    padding: 8px;
+    width: 80px;
+}
+
+#personal-info-table td {
+    padding: 8px;
+    border-bottom: 1px solid #ccc;
+}
+
+/* 바 차트 컨테이너 스타일 */
+#personal-bar-chart-container {
+    width: 100%;
+    height: 100%;
+ 
+    border: 1px solid #ccc;
+    background: #fff;
+}
+
+#personal-info-wrapper {
+    text-align: center; /* 이 요소 내부의 텍스트 중앙정렬 */
+    font-size: 18px;    /* 폰트 사이즈 키우기 */
+}
+
+#personal-info-table th, 
+#personal-info-table td {
+    text-align: center; /* 표 내부 텍스트 중앙정렬 */
+    font-size: 18px;    /* 표 내용 폰트 사이즈 키우기 */
+    padding: 10px;
+}
+
+
+.card2 {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-sizing: border-box; /* 추가 */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.card-section2 {
+    flex: 0 0 auto;
+    min-width: 300px;
+    margin: 10px;
+}
+
+.card-section2:first-child {
+    flex-basis: 20%;
+    margin-left: 5%;
+}
+
+.card-section2:last-child {
+    flex-basis: 65%;
+}
+
+.card-section2 h2 {
+    text-align: center;
+}
+
+#feature-graph-container,
+#bar-chart-container {
+    width: auto;
+}
+
+#feature-graph-container svg,
+#bar-chart-container svg {
+    width: auto;
+    height: auto;
+}

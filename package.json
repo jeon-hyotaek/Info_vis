@@ -1,0 +1,17 @@
+{
+  "name": "your_project_name",
+  "version": "1.0.0",
+  "description": "",
+  "main": "generate_data.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "d3-dsv": "^3.0.1",
+    "express": "^4.21.1"
+  }
+}
